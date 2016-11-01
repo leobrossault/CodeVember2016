@@ -17,9 +17,17 @@ export class Scene {
     this.diffX = 0
     this.diffY = 0
     this.hasStopped = false
+    this.isSelected = false
+    this.canReset = false
 
     // Create the renderer
-    this.renderer = PIXI.autoDetectRenderer(this.width, this.height)
+    this.renderer = PIXI.autoDetectRenderer(this.width, this.height, {
+      antialias: true,
+      transparent: true,
+      resolution: 1,
+      interactive: true
+    })
+
     this.renderer.autoResize = true
     this.stage = new PIXI.Container()
 
@@ -33,6 +41,7 @@ export class Scene {
       this.stage.addChild(this.particles[p])
     }
 
+    this.orb.on('mousedown', this.setState)
     this.stage.addChild(this.orb)
 
     // Store point
@@ -42,6 +51,11 @@ export class Scene {
     this.actualTime = null
     this.direction = null
     this.timer = null
+
+    // Interval background
+    this.bgInterval = null
+    this.bg = document.querySelectorAll('div span')
+    this.count = 100
 
     // Add the canvas to the HTML document
     document.body.appendChild(this.renderer.view)
@@ -61,55 +75,61 @@ export class Scene {
     }, 1000/60)
   }
 
+  setState () {
+    if (_this.isSelected === true) {
+      _this.isSelected = false
+      _this.orbObj.launchBounce('down')
+    } else {
+      _this.isSelected = true
+      _this.orbObj.launchBounce('up')
+    }
+  }
+
   mousePosition (e) {
-    if (_this.hasStopped === true) {
-      _this.orbObj.resetArray()
-
-      for (let k = _this.stage.children.length; k > 1; k--) {
-        _this.stage.removeChild(_this.stage.children[k])
+    if (_this.isSelected === true) {
+      if (_this.hasStopped === true) {
+        _this.hasStopped = false
       }
 
-      _this.hasStopped = false
-    }
+      _this.actualTime = Date.now()
+      _this.actualPoint = new PIXI.Point(e.clientX, e.clientY)
 
-    _this.actualTime = Date.now()
-    _this.actualPoint = new PIXI.Point(e.clientX, e.clientY)
-
-    if (_this.previousPoint !== null) {
-      _this.speed = _this.calcVelocity(e.clientX, e.clientY, _this.actualTime, _this.previousPoint.x, _this.previousPoint.y, _this.previousTime)
-    }
-
-    if (_this.speed !== 0) {
-      _this.orbObj.createParticle(e.clientX, e.clientY, _this.diffX, _this.diffY, _this.speed)
-
-      let particles = _this.orbObj.getParticles()
-      let nbParticleStep = _this.orbObj.getNbParticleStep()
-
-      for (let k = 0; k < nbParticleStep; k++) {
-        _this.stage.addChild(particles[particles.length - k - 1])
+      if (_this.previousPoint !== null) {
+        _this.speed = _this.calcVelocity(e.clientX, e.clientY, _this.actualTime, _this.previousPoint.x, _this.previousPoint.y, _this.previousTime)
       }
+
+      if (_this.speed !== 0) {
+        _this.orbObj.createParticle(e.clientX, e.clientY, _this.diffX, _this.diffY, _this.speed)
+
+        let particles = _this.orbObj.getParticles()
+        let nbParticleStep = _this.orbObj.getNbParticleStep()
+
+        for (let k = 0; k < nbParticleStep; k++) {
+          _this.stage.addChild(particles[particles.length - k - 1])
+        }
+
+        _this.stage.addChild(_this.orb)
+      }
+
+      _this.orbObj.setPosition(e.clientX, e.clientY)
+      _this.orbObj.disform(_this.speed)
+      _this.orb = _this.orbObj.getOrb()
+
+      _this.previousPoint = _this.actualPoint
+      _this.previousTime = _this.actualTime
+
+      if (_this.timer !== null) {
+        clearTimeout(_this.timer)
+      }
+
+      _this.timer = setTimeout(_this.mouseStopped, 100)
     }
-
-    _this.orbObj.setPosition(e.clientX, e.clientY)
-    _this.orbObj.disform(_this.speed)
-    _this.orb = _this.orbObj.getOrb()
-
-    _this.previousPoint = _this.actualPoint
-    _this.previousTime = _this.actualTime
-
-    // _this.orb.destroy()
-    _this.stage.addChild(_this.orb)
-
-    if (_this.timer !== null) {
-      clearTimeout(_this.timer)
-    }
-
-    _this.timer = setTimeout(_this.mouseStopped, 100)
   }
 
   mouseStopped () {
     _this.orbObj.disform(0)
     _this.hasStopped = true
+    clearInterval(_this.bgInterval)
   }
 
   calcVelocity (x_1, y_1, t_1, x_2, y_2, t_2) {

@@ -26,10 +26,29 @@ export class Particle {
 
   setPosition () {
     if (this.isDestroy === false) {
+      let coefX = this.speed * this.diffX
+      let coefY = this.speed * this.diffY
+
+      if (coefX > 3) {
+        coefX = 3
+      }
+
+      if (coefX < -3) {
+        coefX = -3
+      }
+
+      if (coefY > 3) {
+        coefY = 3
+      }
+
+      if (coefY < -3) {
+        coefY = -3
+      }
+
       this.alpha -= 0.02
       this.graphics.alpha = this.alpha
-      this.graphics.position.x += this.speed * this.diffX
-      this.graphics.position.y += this.speed * this.diffY
+      this.graphics.position.x += coefX
+      this.graphics.position.y += coefY
       this.x += this.speed
       this.y += this.speed
       this.speed += 0.01
