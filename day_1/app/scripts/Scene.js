@@ -88,6 +88,18 @@ export class Scene {
   mousePosition (e) {
     if (_this.isSelected === true) {
       if (_this.hasStopped === true) {
+        // _this.orbObj.resetArray()
+
+        for (let k = _this.stage.children.length; k > 0; k--) {
+          if (_this.stage.children[k]) {
+            if (_this.stage.children[k].alpha === 0) {
+              _this.stage.removeChild(_this.stage.children[k])
+            }
+          }
+        }
+
+        _this.canReset = false
+
         _this.hasStopped = false
       }
 
@@ -107,8 +119,6 @@ export class Scene {
         for (let k = 0; k < nbParticleStep; k++) {
           _this.stage.addChild(particles[particles.length - k - 1])
         }
-
-        _this.stage.addChild(_this.orb)
       }
 
       _this.orbObj.setPosition(e.clientX, e.clientY)
@@ -117,6 +127,8 @@ export class Scene {
 
       _this.previousPoint = _this.actualPoint
       _this.previousTime = _this.actualTime
+
+      _this.stage.addChild(_this.orb)
 
       if (_this.timer !== null) {
         clearTimeout(_this.timer)
@@ -129,6 +141,7 @@ export class Scene {
   mouseStopped () {
     _this.orbObj.disform(0)
     _this.hasStopped = true
+
     clearInterval(_this.bgInterval)
   }
 

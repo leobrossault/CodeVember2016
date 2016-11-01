@@ -58,7 +58,7 @@ module.exports = {
             "unix"
         ],
         "lines-around-comment": "error",
-        "max-depth": "error",
+        "max-depth": "off",
         "max-len": "off",
         "max-lines": "error",
         "max-nested-callbacks": "error",
